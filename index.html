@@ -109,14 +109,162 @@
     // ====== CONFIG ======
     const CONTRACT_ADDRESS = "PASTE_YOUR_DEPLOYED_ADDRESS_HERE";
     const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
-    const ABI = [
-      "function workshopTitle() view returns (string)",
-      "function organizer() view returns (address)",
-      "function hasRegistered(address) view returns (bool)",
-      "function register(string fullName, uint8 rating, string comment)",
-      "function totalRegistrations() view returns (uint256)",
-      "function getEntry(uint256 index) view returns (address,string,uint8,string,uint256)",
-      "event Registered(address indexed attendee, uint256 index, uint8 rating)"
+    const ABI = [	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_workshopTitle",
+				"type": "string"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "attendee",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint8",
+				"name": "rating",
+				"type": "uint8"
+			}
+		],
+		"name": "Registered",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "getEntry",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "attendee",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "fullName",
+				"type": "string"
+			},
+			{
+				"internalType": "uint8",
+				"name": "rating",
+				"type": "uint8"
+			},
+			{
+				"internalType": "string",
+				"name": "comment",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "hasRegistered",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "organizer",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "fullName",
+				"type": "string"
+			},
+			{
+				"internalType": "uint8",
+				"name": "rating",
+				"type": "uint8"
+			},
+			{
+				"internalType": "string",
+				"name": "comment",
+				"type": "string"
+			}
+		],
+		"name": "register",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalRegistrations",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "workshopTitle",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	} 
     ];
 
     // ====== UI helpers ======
