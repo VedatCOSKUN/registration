@@ -28,7 +28,7 @@
 <body>
   <h1>Workshop Attendance (Blockchain Demo)</h1>
   <div class="muted">
-    Network: <b>Sepolia</b> • Contract: <span class="mono" id="0x0C021B3355491338BE0c259AE8F3F5E1d18A436E"></span>
+    Network: <b>Sepolia</b> • Contract: <span class="mono" id="0x73D0a6fBDce0DE781a539557bC0002ba9A0b08F8"></span>
   </div>
 
   <div class="card">
@@ -109,7 +109,31 @@
     // ====== CONFIG ======
     const CONTRACT_ADDRESS = "PASTE_YOUR_DEPLOYED_ADDRESS_HERE";
     const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
-    const ABI = [	{
+    const ABI = [
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "fullName",
+				"type": "string"
+			},
+			{
+				"internalType": "uint8",
+				"name": "rating",
+				"type": "uint8"
+			},
+			{
+				"internalType": "string",
+				"name": "comment",
+				"type": "string"
+			}
+		],
+		"name": "register",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "string",
@@ -217,29 +241,6 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "fullName",
-				"type": "string"
-			},
-			{
-				"internalType": "uint8",
-				"name": "rating",
-				"type": "uint8"
-			},
-			{
-				"internalType": "string",
-				"name": "comment",
-				"type": "string"
-			}
-		],
-		"name": "register",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [],
 		"name": "totalRegistrations",
 		"outputs": [
@@ -264,8 +265,8 @@
 		],
 		"stateMutability": "view",
 		"type": "function"
-	} 
-    ];
+	}
+	];
 
     // ====== UI helpers ======
     const $ = (id) => document.getElementById(id);
