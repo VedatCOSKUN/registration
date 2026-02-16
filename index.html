@@ -37,7 +37,6 @@
     <h2>Connect Wallet</h2>
     <div class="row">
       <button class="primary" id="btnConnect">Connect MetaMask</button>
-      <button class="secondary" id="btnSepolia">Switch/Add Sepolia</button>
     </div>
 
     <div class="notice" style="margin-top:10px;">
@@ -85,7 +84,7 @@
   <div class="card">
     <h2>Registration List</h2>
     <div class="row">
-      <button class="secondary" id="btnLoad" disabled>Load Results</button>
+      <button class="primary" id="btnLoad" disabled>Load Results</button>
       <span>Total: <span id="total" class="ok">—</span></span>
     </div>
 
@@ -271,34 +270,6 @@
       }
     };
 
-    $("btnSepolia").onclick = async () => {
-      try {
-        requireMetaMask();
-        // Try switch; if missing, add then switch
-        try {
-          await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }]
-          });
-        } catch (switchErr) {
-          // 4902 = chain not added
-          if (switchErr && switchErr.code === 4902) {
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [SEPOLIA_PARAMS]
-            });
-          } else {
-            throw switchErr;
-          }
-        }
-
-        if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
-        await refreshUI();
-      } catch (e) {
-        setMsg((e && e.message) ? e.message : String(e), "err");
-      }
-    };
-
     $("btnRegister").onclick = async () => {
       try {
         requireMetaMask();
@@ -380,7 +351,6 @@
     // React to MetaMask changes
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", async () => { if (!provider) provider = new ethers.BrowserProvider(window.ethereum); await refreshUI(); });
-      window.ethereum.on("chainChanged", async () => { if (!provider) provider = new ethers.BrowserProvider(window.ethereum); await refreshUI(); });
     }
 
     // Initial UI state
