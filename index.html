@@ -1,13 +1,12 @@
 <!doctype html>
-<!-- trigger rebuild -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Workshop Attendance (Blockchain Demo)</title>
+  <title>Workshop Attendance</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 980px; margin: 26px auto; padding: 0 16px; }
-    h1 { margin: 0 0 6px; }
+    body { font-family: Arial, sans-serif; max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    h1 { margin: 0 0 8px; }
     .muted { color:#666; }
     .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin: 14px 0; }
     .row { display:flex; gap:10px; flex-wrap: wrap; align-items: center; }
@@ -16,49 +15,54 @@
     button { padding:10px 14px; border:0; border-radius:10px; cursor:pointer; }
     button.primary { background:#111; color:#fff; }
     button.secondary { background:#eee; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
     .ok { color:#0a7; font-weight: 700; }
     .warn { color:#c60; font-weight: 700; }
     .err { color:#c00; font-weight: 700; }
     table { width:100%; border-collapse: collapse; }
     th, td { border-bottom: 1px solid #eee; padding: 10px; vertical-align: top; text-align:left; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
-    .log { white-space: pre-wrap; background:#0b1020; color:#d9e2ff; padding: 12px; border-radius: 12px; min-height: 100px; }
     .badge { display:inline-block; padding:3px 8px; border-radius: 999px; background:#f3f3f3; }
+    .notice { padding: 10px 12px; border-radius: 10px; border: 1px solid #eee; background: #fafafa; }
+    .small { font-size: 13px; }
   </style>
 </head>
 <body>
-  <h1>Workshop Attendance (Blockchain Demo)</h1>
-  <div class="muted">
-    Network: <b>Sepolia</b> • Contract: <span class="mono" id="contractAddr"></span>
+  <h1>Workshop Attendance</h1>
+  <div class="muted small">
+    Contract: <span class="mono" id="contractAddr"></span>
   </div>
 
-	
   <div class="card">
-    <h2>1) Connect Wallet</h2>
+    <h2>Connect Wallet</h2>
     <div class="row">
       <button class="primary" id="btnConnect">Connect MetaMask</button>
-      <button class="secondary" id="btnSwitch">Switch to Sepolia</button>
+      <button class="secondary" id="btnSepolia">Switch/Add Sepolia</button>
     </div>
-    <p>Status: <span id="status" class="warn">Not connected</span></p>
-    <p>Account: <span id="account" class="mono">—</span></p>
-    <p>Chain ID: <span id="chainId">—</span></p>
+
+    <div class="notice" style="margin-top:10px;">
+      <div>Status: <span id="status" class="warn">Not connected</span></div>
+      <div>Account: <span id="account" class="mono">—</span></div>
+      <div>Chain ID: <span id="chainId">—</span></div>
+      <div style="margin-top:8px;" class="small muted" id="msg">Tip: Open this page inside MetaMask mobile browser for best results.</div>
+    </div>
   </div>
 
   <div class="card">
-    <h2>2) Register (On-chain)</h2>
-    <p class="muted">
-      Note: This is a public test network. Your name/comment will be visible on-chain.
-      Keep comments short.
+    <h2>Register yourself</h2>
+    <p class="muted small">
+      This runs on a public test network. Your name and comment will be visible on-chain.
+      Please keep comments short.
     </p>
 
     <div class="row">
       <div>
-        <div class="muted">Full name & surname</div>
+        <div class="muted small">Full name</div>
         <input id="fullName" placeholder="e.g., Alice Johnson" />
       </div>
 
       <div>
-        <div class="muted">Rating (0 = worst, 5 = best)</div>
+        <div class="muted small">Rating (0 = worst, 5 = best)</div>
         <select id="rating">
           <option value="5">5</option><option value="4">4</option><option value="3">3</option>
           <option value="2">2</option><option value="1">1</option><option value="0">0</option>
@@ -67,20 +71,21 @@
     </div>
 
     <div style="margin-top:10px;">
-      <div class="muted">Comment (max ~280 chars)</div>
-      <textarea id="comment" placeholder="Write a short comment about the workshop..."></textarea>
+      <div class="muted small">Comment</div>
+      <textarea id="comment" placeholder="Write a short comment..."></textarea>
+      <div class="muted small">Recommended: keep it short (smart contracts store data permanently).</div>
     </div>
 
     <div class="row" style="margin-top:10px;">
-      <button class="primary" id="btnRegister">Register</button>
-      <span class="muted">One registration per wallet address.</span>
+      <button class="primary" id="btnRegister" disabled>Register</button>
+      <span class="muted small" id="onePerWalletHint">One registration per wallet address.</span>
     </div>
   </div>
 
   <div class="card">
-    <h2>3) Results (Read-only)</h2>
+    <h2>Registration List</h2>
     <div class="row">
-      <button class="secondary" id="btnLoad">Load Results</button>
+      <button class="secondary" id="btnLoad" disabled>Load Results</button>
       <span>Total: <span id="total" class="ok">—</span></span>
     </div>
 
@@ -101,247 +106,196 @@
     </div>
   </div>
 
-  <div class="card">
-    <h2>Logs</h2>
-    <div id="log" class="log"></div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
   <script>
     // ====== CONFIG ======
     const CONTRACT_ADDRESS = "0x63906053621a02E3B4E15fdB0e03D7d929d3A487";
+    const SEPOLIA_CHAIN_ID_DEC = 11155111;
     const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
-    const ABI = [
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "fullName",
-				"type": "string"
-			},
-			{
-				"internalType": "uint8",
-				"name": "rating",
-				"type": "uint8"
-			},
-			{
-				"internalType": "string",
-				"name": "comment",
-				"type": "string"
-			}
-		],
-		"name": "register",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "_workshopTitle",
-				"type": "string"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "attendee",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "index",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "rating",
-				"type": "uint8"
-			}
-		],
-		"name": "Registered",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "index",
-				"type": "uint256"
-			}
-		],
-		"name": "getEntry",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "attendee",
-				"type": "address"
-			},
-			{
-				"internalType": "string",
-				"name": "fullName",
-				"type": "string"
-			},
-			{
-				"internalType": "uint8",
-				"name": "rating",
-				"type": "uint8"
-			},
-			{
-				"internalType": "string",
-				"name": "comment",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "timestamp",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "hasRegistered",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "organizer",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "totalRegistrations",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "workshopTitle",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-	];
 
-    // ====== UI helpers ======
+    // Minimal Sepolia params (for wallet_addEthereumChain)
+    const SEPOLIA_PARAMS = {
+      chainId: SEPOLIA_CHAIN_ID_HEX,
+      chainName: "Sepolia",
+      nativeCurrency: { name: "SepoliaETH", symbol: "ETH", decimals: 18 },
+      rpcUrls: ["https://rpc.sepolia.org"],
+      blockExplorerUrls: ["https://sepolia.etherscan.io"]
+    };
+
+    const ABI = [
+      {
+        "inputs": [
+          { "internalType": "string", "name": "fullName", "type": "string" },
+          { "internalType": "uint8", "name": "rating", "type": "uint8" },
+          { "internalType": "string", "name": "comment", "type": "string" }
+        ],
+        "name": "register",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "string", "name": "_workshopTitle", "type": "string" }],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [{ "internalType": "uint256", "name": "index", "type": "uint256" }],
+        "name": "getEntry",
+        "outputs": [
+          { "internalType": "address", "name": "attendee", "type": "address" },
+          { "internalType": "string", "name": "fullName", "type": "string" },
+          { "internalType": "uint8", "name": "rating", "type": "uint8" },
+          { "internalType": "string", "name": "comment", "type": "string" },
+          { "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+        "name": "hasRegistered",
+        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "totalRegistrations",
+        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "workshopTitle",
+        "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
+
+    // ====== Helpers ======
     const $ = (id) => document.getElementById(id);
-    function log(msg) {
-      const ts = new Date().toLocaleTimeString();
-      $("log").textContent = `[${ts}] ${msg}\n` + $("log").textContent;
+
+    function setMsg(text, kind = "muted") {
+      const el = $("msg");
+      el.textContent = text;
+      el.className = "small " + (kind === "ok" ? "ok" : kind === "warn" ? "warn" : kind === "err" ? "err" : "muted");
     }
 
-    $("contractAddr").textContent = CONTRACT_ADDRESS;
-
-    let provider, signer, contractRO, contractRW;
+    function escapeHtml(str) {
+      return (str || "").replace(/[&<>"']/g, (m) => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
 
     function requireMetaMask() {
-      if (!window.ethereum) throw new Error("MetaMask not detected");
+      if (!window.ethereum) throw new Error("MetaMask not detected. Please install MetaMask (mobile or extension).");
     }
 
-    async function refresh() {
-      if (!provider) return;
+    function setButtonsEnabled(enabled) {
+      $("btnRegister").disabled = !enabled;
+      $("btnLoad").disabled = !enabled;
+    }
+
+    // ====== State ======
+    $("contractAddr").textContent = CONTRACT_ADDRESS;
+
+    let provider = null;
+    let signer = null;
+    let contractRO = null;
+    let contractRW = null;
+
+    async function refreshUI() {
+      if (!provider) {
+        $("status").className = "warn";
+        $("status").textContent = "Not connected";
+        $("account").textContent = "—";
+        $("chainId").textContent = "—";
+        setButtonsEnabled(false);
+        return;
+      }
+
       const net = await provider.getNetwork();
       $("chainId").textContent = net.chainId.toString();
 
       const accounts = await provider.send("eth_accounts", []);
-      if (accounts.length) {
-        $("status").className = "ok";
-        $("status").textContent = "Connected";
-        $("account").textContent = accounts[0];
-        signer = await provider.getSigner();
-        contractRW = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      } else {
+      if (!accounts.length) {
         $("status").className = "warn";
         $("status").textContent = "Not connected";
         $("account").textContent = "—";
-        signer = null;
-        contractRW = null;
+        setButtonsEnabled(false);
+        setMsg("Click “Connect MetaMask” to continue.", "muted");
+        return;
       }
-      contractRO = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-    }
 
-    async function ensureSepolia() {
-      const chainId = await window.ethereum.request({ method: "eth_chainId" });
-      if (chainId !== SEPOLIA_CHAIN_ID_HEX) {
+      $("account").textContent = accounts[0];
+
+      // Network check
+      if (Number(net.chainId) !== SEPOLIA_CHAIN_ID_DEC) {
         $("status").className = "warn";
         $("status").textContent = "Wrong network (switch to Sepolia)";
+        setButtonsEnabled(false);
+        setMsg("Please switch to Sepolia, then try again.", "warn");
+        contractRO = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+        return;
+      }
+
+      $("status").className = "ok";
+      $("status").textContent = "Connected";
+      setButtonsEnabled(true);
+      setMsg("Connected to Sepolia. You can register or load results.", "ok");
+
+      signer = await provider.getSigner();
+      contractRO = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+      contractRW = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    }
+
+    async function ensureSepoliaOrThrow() {
+      const chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
+      if (chainIdHex !== SEPOLIA_CHAIN_ID_HEX) {
         throw new Error("Wrong network. Please switch to Sepolia.");
       }
     }
 
+    // ====== Actions ======
     $("btnConnect").onclick = async () => {
       try {
         requireMetaMask();
         provider = new ethers.BrowserProvider(window.ethereum);
-        log("Requesting wallet connection...");
         await provider.send("eth_requestAccounts", []);
-        await refresh();
-        log("Connected.");
+        await refreshUI();
       } catch (e) {
-        log("ERROR: " + (e.message || e));
+        setMsg(e.message || String(e), "err");
       }
     };
 
-    $("btnSwitch").onclick = async () => {
+    $("btnSepolia").onclick = async () => {
       try {
         requireMetaMask();
-        log("Switching to Sepolia...");
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }]
-        });
+        // Try switch; if missing, add then switch
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }]
+          });
+        } catch (switchErr) {
+          // 4902 = chain not added
+          if (switchErr && switchErr.code === 4902) {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [SEPOLIA_PARAMS]
+            });
+          } else {
+            throw switchErr;
+          }
+        }
+
         if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
-        await refresh();
-        log("Switched to Sepolia.");
+        await refreshUI();
       } catch (e) {
-        log("ERROR: " + (e.message || e));
+        setMsg((e && e.message) ? e.message : String(e), "err");
       }
     };
 
@@ -349,8 +303,8 @@
       try {
         requireMetaMask();
         if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
-        await refresh();
-        await ensureSepolia();
+        await refreshUI();
+        await ensureSepoliaOrThrow();
 
         if (!contractRW) throw new Error("Please connect MetaMask first.");
 
@@ -362,25 +316,29 @@
         if (rating < 0 || rating > 5) throw new Error("Rating must be 0..5.");
         if (comment.length > 280) throw new Error("Comment too long (max 280).");
 
-        const already = await contractRO.hasRegistered(await signer.getAddress());
-        if (already) throw new Error("This wallet already registered.");
+        // Friendly check if your contract enforces one-per-wallet
+        const myAddr = await signer.getAddress();
+        const already = await contractRO.hasRegistered(myAddr);
+        if (already) throw new Error("This wallet has already registered.");
 
-        log("Sending register() transaction... MetaMask will prompt.");
+        setMsg("Please confirm the transaction in MetaMask…", "muted");
+
         const tx = await contractRW.register(fullName, rating, comment);
-        log("Submitted: " + tx.hash);
-        log("Waiting for confirmation...");
+        setMsg("Transaction submitted. Waiting for confirmation…", "muted");
 
-        const receipt = await tx.wait();
-        log("Confirmed in block " + receipt.blockNumber);
+        await tx.wait();
 
         $("fullName").value = "";
         $("comment").value = "";
 
-        // Refresh results count quickly
+        setMsg("✅ Registration successful!", "ok");
+
+        // Update total count
         const total = await contractRO.totalRegistrations();
         $("total").textContent = total.toString();
+
       } catch (e) {
-        log("ERROR: " + (e.message || e));
+        setMsg(e.message || String(e), "err");
       }
     };
 
@@ -388,12 +346,11 @@
       try {
         requireMetaMask();
         if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
-        await refresh();
-        await ensureSepolia();
+        await refreshUI();
+        await ensureSepoliaOrThrow();
 
         const total = await contractRO.totalRegistrations();
         $("total").textContent = total.toString();
-        log("Loading " + total.toString() + " entries...");
 
         const tbody = $("resultsTable").querySelector("tbody");
         tbody.innerHTML = "";
@@ -414,24 +371,20 @@
           tbody.appendChild(tr);
         }
 
-        log("Results loaded.");
+        setMsg("Results loaded.", "ok");
       } catch (e) {
-        log("ERROR: " + (e.message || e));
+        setMsg(e.message || String(e), "err");
       }
     };
 
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, (m) => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[m]));
-    }
-
+    // React to MetaMask changes
     if (window.ethereum) {
-      window.ethereum.on("accountsChanged", async () => { log("Account changed."); if (!provider) provider = new ethers.BrowserProvider(window.ethereum); await refresh(); });
-      window.ethereum.on("chainChanged", async () => { log("Network changed."); if (!provider) provider = new ethers.BrowserProvider(window.ethereum); await refresh(); });
+      window.ethereum.on("accountsChanged", async () => { if (!provider) provider = new ethers.BrowserProvider(window.ethereum); await refreshUI(); });
+      window.ethereum.on("chainChanged", async () => { if (!provider) provider = new ethers.BrowserProvider(window.ethereum); await refreshUI(); });
     }
 
-    log("Tip: Switch MetaMask to Sepolia and ensure you have test ETH.");
+    // Initial UI state
+    refreshUI();
   </script>
 </body>
 </html>
