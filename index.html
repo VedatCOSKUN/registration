@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- trigger rebuild -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -26,31 +27,38 @@
   </style>
 </head>
 <body>
-  <h1>Workshop Attendance Blockchain Demo App</h1>
+  <h1>Workshop Attendance (Blockchain Demo)</h1>
   <div class="muted">
-    Currently, Smart Contract with address <span class="mono" id="contractAddr"></span> is running on <b>Sepolia</b> test network. 
+    Network: <b>Sepolia</b> • Contract: <span class="mono" id="contractAddr"></span>
   </div>
+
 	
   <div class="card">
-    <h2>(1) Connect Wallet by pressing the button below.</h2>
+    <h2>1) Connect Wallet</h2>
     <div class="row">
       <button class="primary" id="btnConnect">Connect MetaMask</button>
+      <button class="secondary" id="btnSwitch">Switch to Sepolia</button>
     </div>
-    <p>Connection to the Blockchain Status: <span id="status" class="warn">Not connected</span></p>
-    <p>Account address of the User: <span id="account" class="mono">—</span></p>
-    <p>Chain ID of the Network: <span id="chainId">—</span></p>
+    <p>Status: <span id="status" class="warn">Not connected</span></p>
+    <p>Account: <span id="account" class="mono">—</span></p>
+    <p>Chain ID: <span id="chainId">—</span></p>
   </div>
 
   <div class="card">
-    <h2>(2) Register yourself to the Workshop</h2>
+    <h2>2) Register (On-chain)</h2>
+    <p class="muted">
+      Note: This is a public test network. Your name/comment will be visible on-chain.
+      Keep comments short.
+    </p>
+
     <div class="row">
       <div>
-        <div class="muted">Your Name please</div>
+        <div class="muted">Full name & surname</div>
         <input id="fullName" placeholder="e.g., Alice Johnson" />
       </div>
 
       <div>
-        <div class="muted">Your Rating please (0 = worst, 5 = best)</div>
+        <div class="muted">Rating (0 = worst, 5 = best)</div>
         <select id="rating">
           <option value="5">5</option><option value="4">4</option><option value="3">3</option>
           <option value="2">2</option><option value="1">1</option><option value="0">0</option>
@@ -59,20 +67,20 @@
     </div>
 
     <div style="margin-top:10px;">
-      <div class="muted">Your Comment please</div>
+      <div class="muted">Comment (max ~280 chars)</div>
       <textarea id="comment" placeholder="Write a short comment about the workshop..."></textarea>
     </div>
 
     <div class="row" style="margin-top:10px;">
       <button class="primary" id="btnRegister">Register</button>
-      <span class="muted">One registration per wallet address will be accepted.</span>
+      <span class="muted">One registration per wallet address.</span>
     </div>
   </div>
 
   <div class="card">
-    <h2>(3) Registration List</h2>
+    <h2>3) Results (Read-only)</h2>
     <div class="row">
-      <button class="primary" id="btnLoad">Load Results</button>
+      <button class="secondary" id="btnLoad">Load Results</button>
       <span>Total: <span id="total" class="ok">—</span></span>
     </div>
 
