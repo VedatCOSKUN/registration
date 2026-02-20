@@ -28,35 +28,41 @@
   </style>
 </head>
 <body>
-  <h1>Howest Attendance</h1>
+  <h1>Workshop Attendance</h1>
   <div class="muted small">
-    Smart Contract Address: <span class="mono" id="contractAddr"></span>
+    Expected network: <b>Sepolia</b> • Contract: <span class="mono" id="contractAddr"></span>
   </div>
 
   <div class="card">
-    <h2>Connect You Wallet</h2>
+    <h2>1) Connect Wallet</h2>
     <div class="row">
       <button class="primary" id="btnConnect">Connect MetaMask</button>
-      <button class="secondary" id="btnSwitch">Switch to Sepolia</button>
+      <button class="secondary" id="btnSepolia">Switch/Add Sepolia</button>
     </div>
 
     <div class="notice" style="margin-top:10px;">
-      <div>Connection Status: <span id="status" class="warn">Not connected, press <b>Connect Metamask</b></span></div>
-      <div>Account Address: <span id="account" class="warn">No account yet...</span></div>
-      <div>Chain Id of the Blockchain Network: <span id="chainId">Not connected yet...</span></div>
+      <div>Status: <span id="status" class="warn">Not connected</span></div>
+      <div>Account: <span id="account" class="mono">—</span></div>
+      <div>Chain ID: <span id="chainId">—</span></div>
+      <div style="margin-top:8px;" class="small muted" id="msg">Tip: Open this page inside MetaMask mobile browser for best results.</div>
     </div>
   </div>
 
   <div class="card">
-    <h2>Register yourself</h2>
+    <h2>2) Register yourself (On-chain)</h2>
+    <p class="muted small">
+      This runs on a public test network. Your name and comment will be visible on-chain.
+      Please keep comments short.
+    </p>
+
     <div class="row">
       <div>
-        <div class="muted small">Your full name please</div>
+        <div class="muted small">Full name</div>
         <input id="fullName" placeholder="e.g., Alice Johnson" />
       </div>
 
       <div>
-        <div class="muted small">Your Rating please(0 = worst, 5 = best)</div>
+        <div class="muted small">Rating (0 = worst, 5 = best)</div>
         <select id="rating">
           <option value="5">5</option><option value="4">4</option><option value="3">3</option>
           <option value="2">2</option><option value="1">1</option><option value="0">0</option>
@@ -65,7 +71,7 @@
     </div>
 
     <div style="margin-top:10px;">
-      <div class="muted small">Your Comment please</div>
+      <div class="muted small">Comment</div>
       <textarea id="comment" placeholder="Write a short comment..."></textarea>
       <div class="muted small">Recommended: keep it short (smart contracts store data permanently).</div>
     </div>
@@ -77,9 +83,9 @@
   </div>
 
   <div class="card">
-    <h2>Registration List</h2>
+    <h2>3) Registration List (Read-only)</h2>
     <div class="row">
-      <button class="primary" id="btnLoad" disabled>Load Results</button>
+      <button class="secondary" id="btnLoad" disabled>Load Results</button>
       <span>Total: <span id="total" class="ok">—</span></span>
     </div>
 
@@ -103,7 +109,7 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
   <script>
     // ====== CONFIG ======
-    const CONTRACT_ADDRESS = "0x63906053621a02E3B4E15fdB0e03D7d929d3A487";
+    const CONTRACT_ADDRESS = "0xf859B5A875322cb163F9B35406d09C011A605f11";
     const SEPOLIA_CHAIN_ID_DEC = 11155111;
     const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
 
@@ -117,56 +123,162 @@
     };
 
     const ABI = [
-      {
-        "inputs": [
-          { "internalType": "string", "name": "fullName", "type": "string" },
-          { "internalType": "uint8", "name": "rating", "type": "uint8" },
-          { "internalType": "string", "name": "comment", "type": "string" }
-        ],
-        "name": "register",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [{ "internalType": "string", "name": "_workshopTitle", "type": "string" }],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-      },
-      {
-        "inputs": [{ "internalType": "uint256", "name": "index", "type": "uint256" }],
-        "name": "getEntry",
-        "outputs": [
-          { "internalType": "address", "name": "attendee", "type": "address" },
-          { "internalType": "string", "name": "fullName", "type": "string" },
-          { "internalType": "uint8", "name": "rating", "type": "uint8" },
-          { "internalType": "string", "name": "comment", "type": "string" },
-          { "internalType": "uint256", "name": "timestamp", "type": "uint256" }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-        "name": "hasRegistered",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "totalRegistrations",
-        "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "workshopTitle",
-        "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-        "stateMutability": "view",
-        "type": "function"
-      }
+                	{
+                		"inputs": [
+                			{
+                				"internalType": "string",
+                				"name": "_workshopTitle",
+                				"type": "string"
+                			}
+                		],
+                		"stateMutability": "nonpayable",
+                		"type": "constructor"
+                	},
+                	{
+                		"anonymous": false,
+                		"inputs": [
+                			{
+                				"indexed": true,
+                				"internalType": "address",
+                				"name": "attendee",
+                				"type": "address"
+                			},
+                			{
+                				"indexed": false,
+                				"internalType": "uint256",
+                				"name": "index",
+                				"type": "uint256"
+                			},
+                			{
+                				"indexed": false,
+                				"internalType": "uint8",
+                				"name": "rating",
+                				"type": "uint8"
+                			}
+                		],
+                		"name": "Registered",
+                		"type": "event"
+                	},
+                	{
+                		"inputs": [
+                			{
+                				"internalType": "uint256",
+                				"name": "index",
+                				"type": "uint256"
+                			}
+                		],
+                		"name": "getEntry",
+                		"outputs": [
+                			{
+                				"internalType": "address",
+                				"name": "attendee",
+                				"type": "address"
+                			},
+                			{
+                				"internalType": "string",
+                				"name": "fullName",
+                				"type": "string"
+                			},
+                			{
+                				"internalType": "uint8",
+                				"name": "rating",
+                				"type": "uint8"
+                			},
+                			{
+                				"internalType": "string",
+                				"name": "comment",
+                				"type": "string"
+                			},
+                			{
+                				"internalType": "uint256",
+                				"name": "timestamp",
+                				"type": "uint256"
+                			}
+                		],
+                		"stateMutability": "view",
+                		"type": "function"
+                	},
+                	{
+                		"inputs": [
+                			{
+                				"internalType": "address",
+                				"name": "",
+                				"type": "address"
+                			}
+                		],
+                		"name": "hasRegistered",
+                		"outputs": [
+                			{
+                				"internalType": "bool",
+                				"name": "",
+                				"type": "bool"
+                			}
+                		],
+                		"stateMutability": "view",
+                		"type": "function"
+                	},
+                	{
+                		"inputs": [],
+                		"name": "organizer",
+                		"outputs": [
+                			{
+                				"internalType": "address",
+                				"name": "",
+                				"type": "address"
+                			}
+                		],
+                		"stateMutability": "view",
+                		"type": "function"
+                	},
+                	{
+                		"inputs": [
+                			{
+                				"internalType": "string",
+                				"name": "fullName",
+                				"type": "string"
+                			},
+                			{
+                				"internalType": "uint8",
+                				"name": "rating",
+                				"type": "uint8"
+                			},
+                			{
+                				"internalType": "string",
+                				"name": "comment",
+                				"type": "string"
+                			}
+                		],
+                		"name": "register",
+                		"outputs": [],
+                		"stateMutability": "nonpayable",
+                		"type": "function"
+                	},
+                	{
+                		"inputs": [],
+                		"name": "totalRegistrations",
+                		"outputs": [
+                			{
+                				"internalType": "uint256",
+                				"name": "",
+                				"type": "uint256"
+                			}
+                		],
+                		"stateMutability": "view",
+                		"type": "function"
+                	},
+                	{
+                		"inputs": [],
+                		"name": "workshopTitle",
+                		"outputs": [
+                			{
+                				"internalType": "string",
+                				"name": "",
+                				"type": "string"
+                			}
+                		],
+                		"stateMutability": "view",
+                		"type": "function"
+                	}
     ];
 
     // ====== Helpers ======
@@ -265,19 +377,31 @@
       }
     };
 
-    $("btnSwitch").onclick = async () => {
+    $("btnSepolia").onclick = async () => {
       try {
         requireMetaMask();
-        log("Switching to Sepolia...");
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }]
-        });
+        // Try switch; if missing, add then switch
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }]
+          });
+        } catch (switchErr) {
+          // 4902 = chain not added
+          if (switchErr && switchErr.code === 4902) {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [SEPOLIA_PARAMS]
+            });
+          } else {
+            throw switchErr;
+          }
+        }
+
         if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
-        await refresh();
-        log("Switched to Sepolia.");
+        await refreshUI();
       } catch (e) {
-        log("ERROR: " + (e.message || e));
+        setMsg((e && e.message) ? e.message : String(e), "err");
       }
     };
 
@@ -362,6 +486,7 @@
     // React to MetaMask changes
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", async () => { if (!provider) provider = new ethers.BrowserProvider(window.ethereum); await refreshUI(); });
+      window.ethereum.on("chainChanged", async () => { if (!provider) provider = new ethers.BrowserProvider(window.ethereum); await refreshUI(); });
     }
 
     // Initial UI state
