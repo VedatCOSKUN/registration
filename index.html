@@ -28,22 +28,22 @@
   </style>
 </head>
 <body>
-  <h1>Workshop Attendance</h1>
+  <h1>Howest Attendance</h1>
   <div class="muted small">
-    Contract: <span class="mono" id="contractAddr"></span>
+    Smart Contract Address: <span class="mono" id="contractAddr"></span>
   </div>
 
   <div class="card">
-    <h2>Connect Wallet</h2>
+    <h2>Connect You Wallet</h2>
     <div class="row">
       <button class="primary" id="btnConnect">Connect MetaMask</button>
+      <button class="secondary" id="btnSwitch">Switch to Sepolia</button>
     </div>
 
     <div class="notice" style="margin-top:10px;">
-      <div>Status: <span id="status" class="warn">Not connected</span></div>
-      <div>Account: <span id="account" class="mono">—</span></div>
-      <div>Chain ID: <span id="chainId">—</span></div>
-      <div style="margin-top:8px;" class="small muted" id="msg">Tip: Open this page inside MetaMask mobile browser for best results.</div>
+      <div>Status: <span id="status" class="warn">Not connected, press <b>Connect Metamask</b></span></div>
+      <div>Account: <span id="account" class="warn">No account yet...</span></div>
+      <div>Chain Id: <span id="chainId">No Chain Id yet...</span></div>
     </div>
   </div>
 
@@ -56,12 +56,12 @@
 
     <div class="row">
       <div>
-        <div class="muted small">Full name</div>
+        <div class="muted small">Your full name please</div>
         <input id="fullName" placeholder="e.g., Alice Johnson" />
       </div>
 
       <div>
-        <div class="muted small">Rating (0 = worst, 5 = best)</div>
+        <div class="muted small">Your Rating please(0 = worst, 5 = best)</div>
         <select id="rating">
           <option value="5">5</option><option value="4">4</option><option value="3">3</option>
           <option value="2">2</option><option value="1">1</option><option value="0">0</option>
@@ -70,7 +70,7 @@
     </div>
 
     <div style="margin-top:10px;">
-      <div class="muted small">Comment</div>
+      <div class="muted small">Your Comment please</div>
       <textarea id="comment" placeholder="Write a short comment..."></textarea>
       <div class="muted small">Recommended: keep it short (smart contracts store data permanently).</div>
     </div>
@@ -267,6 +267,22 @@
         await refreshUI();
       } catch (e) {
         setMsg(e.message || String(e), "err");
+      }
+    };
+
+    $("btnSwitch").onclick = async () => {
+      try {
+        requireMetaMask();
+        log("Switching to Sepolia...");
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }]
+        });
+        if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
+        await refresh();
+        log("Switched to Sepolia.");
+      } catch (e) {
+        log("ERROR: " + (e.message || e));
       }
     };
 
